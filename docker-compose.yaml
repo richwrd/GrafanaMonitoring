@@ -1,0 +1,68 @@
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy-manager
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3010:3000"
+    networks:
+      - nginx_proxy
+      - grafana_network 
+
+  grafana-agent:
+    image: grafana/agent:latest
+    container_name: grafana-agent
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/agent/config.yaml
+    command:
+      - "--config.file=/etc/agent/config.yaml"
+    ports:
+      - "9090:9090"  # Prometheus UI port
+    networks:
+      - postgresql_network
+      - grafana_network
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir
+    command: 
+      - "-config.file=/etc/mimir/config.yaml"
+    volumes:
+      - ./grafana-mimir/config.yaml:/etc/mimir/config.yaml
+      - mimir-data:/data
+    ports:
+      - "9009:9009"  # Mimir API port
+    depends_on:
+      - etcd
+    networks:
+      - postgresql_network
+      - grafana_network 
+
+volumes:
+  grafana-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/sdb1/stacks/grafana/data
+  mimir-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/sdb1/stacks/grafana/mimir_data
+  
+
+networks:
+  nginx_proxy:
+    external: true
+  grafana_network:
+    external: true
