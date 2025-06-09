@@ -1,0 +1,46 @@
+target: all
+
+server:
+  http_listen_port: 9096 # Porta HTTP para o Mimir
+  grpc_listen_port: 9095 # Porta gRPC para o Mimir
+
+blocks_storage:
+  backend: filesystem # Usando sistema de arquivos para o armazenamento
+  filesystem:
+    dir: /data/blocks # Diretório local para armazenamento de blocos
+  tsdb:
+    dir: /data/tsdb # Diretório local para armazenamento de TSDB (dados de séries temporais)
+
+compactor:
+  data_dir: /data/compactor # Diretório local para compactação de dados
+  sharding_ring:
+    kvstore:
+      store: inmemory # Usando memória para a chave/valor do sharding
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory # Usando memória para a chave/valor do sharding
+
+ingester:
+  ring:
+    kvstore:
+      store: inmemory # Usando memória para a chave/valor do sharding
+
+querier: {} # Configuração padrão, pode ser ajustado conforme necessário
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 1024 # Máximo de solicitações pendentes por inquilino
+
+store_gateway:
+  sharding_ring:
+    kvstore:
+      store: inmemory # Usando memória para o sharding do Store Gateway
+
+frontend:
+  log_queries_longer_than: 5s # Log de consultas que duram mais de 5 segundos
+
+limits:
+  max_label_names_per_series: 30 # Limite de nomes de rótulos por série
+  ingestion_rate: 1000000 # Taxa de ingestão de dados por segundo
+  ingestion_burst_size: 2000000 # Tamanho do pico de ingestão de dados
